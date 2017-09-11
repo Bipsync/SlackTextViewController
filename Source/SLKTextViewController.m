@@ -395,6 +395,10 @@ CGFloat const SLKAutoCompletionViewDefaultHeight = 140.0;
 
 - (CGFloat)slk_appropriateKeyboardHeightFromRect:(CGRect)rect
 {
+    if (self.isPresentedInPopover) {
+        return 0;
+    }
+
     CGRect keyboardRect = [self.view convertRect:rect fromView:nil];
     
     CGFloat viewHeight = CGRectGetHeight(self.view.bounds);
