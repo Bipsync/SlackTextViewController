@@ -137,8 +137,8 @@ static NSString *const SLKTextViewGenericFormattingSelectorPrefix = @"slk_format
     if (!_placeholderLabel) {
         _placeholderLabel = [UILabel new];
         _placeholderLabel.clipsToBounds = NO;
-        _placeholderLabel.autoresizesSubviews = NO;
         _placeholderLabel.numberOfLines = 1;
+        _placeholderLabel.autoresizesSubviews = NO;
         _placeholderLabel.font = self.font;
         _placeholderLabel.backgroundColor = [UIColor clearColor];
         _placeholderLabel.textColor = [UIColor lightGrayColor];
@@ -158,6 +158,11 @@ static NSString *const SLKTextViewGenericFormattingSelectorPrefix = @"slk_format
 - (UIColor *)placeholderColor
 {
     return self.placeholderLabel.textColor;
+}
+
+- (UIFont *)placeholderFont
+{
+    return self.placeholderLabel.font;
 }
 
 - (NSUInteger)numberOfLines
@@ -401,6 +406,23 @@ SLKPastableMediaType SLKPastableMediaTypeFromNSString(NSString *string)
     self.placeholderLabel.textColor = color;
 }
 
+- (void)setPlaceholderNumberOfLines:(NSInteger)numberOfLines
+{
+    self.placeholderLabel.numberOfLines = numberOfLines;
+    
+    [self setNeedsLayout];
+}
+
+- (void)setPlaceholderFont:(UIFont *)placeholderFont
+{
+    if (!placeholderFont) {
+        self.placeholderLabel.font = self.font;
+    }
+    else {
+        self.placeholderLabel.font = placeholderFont;
+    }
+}
+
 - (void)setUndoManagerEnabled:(BOOL)enabled
 {
     if (self.undoManagerEnabled == enabled) {
@@ -439,6 +461,8 @@ SLKPastableMediaType SLKPastableMediaTypeFromNSString(NSString *string)
 - (void)setSelectedRange:(NSRange)selectedRange
 {
     [super setSelectedRange:selectedRange];
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:SLKTextViewSelectedRangeDidChangeNotification object:self userInfo:nil];
 }
 
 - (void)setSelectedTextRange:(UITextRange *)selectedTextRange
@@ -452,10 +476,20 @@ SLKPastableMediaType SLKPastableMediaTypeFromNSString(NSString *string)
 {
     // Registers for undo management
     [self slk_prepareForUndo:@"Text Set"];
-    
-    [super setText:text];
+
+    if (text) {
+        [self setAttributedText:[self slk_defaultAttributedStringForText:text]];
+    }
+    else {
+        [self setAttributedText:nil];
+    }
     
     [[NSNotificationCenter defaultCenter] postNotificationName:UITextViewTextDidChangeNotification object:self];
+}
+
+- (NSString *)text
+{
+    return self.attributedText.string;
 }
 
 - (void)setAttributedText:(NSAttributedString *)attributedText
@@ -706,9 +740,15 @@ SLKPastableMediaType SLKPastableMediaTypeFromNSString(NSString *string)
 {
     UIMenuItem *undo = [[UIMenuItem alloc] initWithTitle:NSLocalizedString(@"Undo", nil) action:@selector(slk_undo:)];
     UIMenuItem *redo = [[UIMenuItem alloc] initWithTitle:NSLocalizedString(@"Redo", nil) action:@selector(slk_redo:)];
-    UIMenuItem *format = [[UIMenuItem alloc] initWithTitle:NSLocalizedString(@"Format", nil) action:@selector(slk_presentFormattingMenu:)];
     
-    [[UIMenuController sharedMenuController] setMenuItems:@[undo, redo, format]];
+    NSMutableArray *items = [NSMutableArray arrayWithObjects:undo, redo, nil];
+    
+    if (self.registeredFormattingTitles.count > 0) {
+        UIMenuItem *format = [[UIMenuItem alloc] initWithTitle:NSLocalizedString(@"Format", nil) action:@selector(slk_presentFormattingMenu:)];
+        [items addObject:format];
+    }
+    
+    [[UIMenuController sharedMenuController] setMenuItems:items];
 }
 
 - (void)slk_undo:(id)sender
@@ -1101,13 +1141,6 @@ typedef void (^SLKKeyCommandHandler)(UIKeyCommand *keyCommand);
     [self slk_unregisterNotifications];
     
     [self removeObserver:self forKeyPath:NSStringFromSelector(@selector(contentSize))];
-    
-    _placeholderLabel = nil;
-    
-    _registeredFormattingTitles = nil;
-    _registeredFormattingSymbols = nil;
-    _registeredKeyCommands = nil;
-    _registeredKeyCallbacks = nil;
 }
 
 @end
