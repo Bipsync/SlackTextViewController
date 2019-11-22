@@ -365,7 +365,9 @@ NSString * const SLKTextInputbarDidMoveNotification =   @"SLKTextInputbarDidMove
 {
     CGFloat margin = self.contentInset.bottom;
     margin += self.slk_contentViewHeight;
-    
+    if (SLK_IS_IPAD) {
+        margin += 20;
+    }
     return margin;
 }
 
