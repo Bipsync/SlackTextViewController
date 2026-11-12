@@ -1,3 +1,13 @@
+> [!WARNING]
+> **Deprecated. This fork is no longer changed.**
+>
+> Bipsync's copy of SlackTextViewController now lives in
+> [Bipsync/bipsync-notes-ios-slacktextviewcontroller](https://github.com/Bipsync/bipsync-notes-ios-slacktextviewcontroller),
+> which builds it as a static-library `.xcframework` for the Bipsync iOS app. Make any future
+> changes there.
+>
+> This fork is kept as the recorded base for that repo (commit `9e60013`). Please don't delete it.
+
 # SlackTextViewController
 
 **IMPORTANT NOTICE: Please update to >= `1.9` to avoid any risk of app rejection.
